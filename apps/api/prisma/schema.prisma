@@ -1,0 +1,518 @@
+// Aurora Portfolio Platform — data model
+// Every public page is rendered from these tables, so the admin panel can
+// change the whole website without a code deploy.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+  SPAM
+}
+
+enum MediaProvider {
+  LOCAL
+  CLOUDINARY
+}
+
+// ---------------------------------------------------------------------------
+// Identity, access control, auditing
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  avatarUrl    String?
+  jobTitle     String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+
+  roles         Role[]         @relation("UserRoles")
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+  media         Media[]
+  posts         Post[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+model Role {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  isSystem    Boolean @default(false)
+
+  users       User[]       @relation("UserRoles")
+  permissions Permission[] @relation("RolePermissions")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Permission {
+  id          String  @id @default(cuid())
+  key         String  @unique // "projects:write"
+  resource    String
+  action      String
+  description String?
+
+  roles Role[] @relation("RolePermissions")
+
+  createdAt DateTime @default(now())
+
+  @@unique([resource, action])
+  @@index([resource])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, revokedAt])
+}
+
+model AuditLog {
+  id         String  @id @default(cuid())
+  action     String // create | update | delete | login | logout
+  resource   String
+  resourceId String?
+  userId     String?
+  user       User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  before     Json?
+  after      Json?
+  ip         String?
+  userAgent  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([resource, createdAt])
+  @@index([userId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Taxonomy
+// ---------------------------------------------------------------------------
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  color       String?
+  order       Int     @default(0)
+
+  projects Project[]
+  posts    Post[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Technology {
+  id      String        @id @default(cuid())
+  name    String
+  slug    String        @unique
+  group   String? // frontend | backend | devops | design | tooling
+  iconUrl String?
+  color   String?
+  level   Int? // 0-100 proficiency
+  order   Int           @default(0)
+  status  ContentStatus @default(PUBLISHED)
+
+  projects Project[] @relation("ProjectTechnologies")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, order])
+}
+
+// ---------------------------------------------------------------------------
+// Portfolio content
+// ---------------------------------------------------------------------------
+
+model Project {
+  id        String        @id @default(cuid())
+  title     String
+  slug      String        @unique
+  summary   String
+  content   String? // markdown
+  coverUrl  String?
+  gallery   String[]      @default([])
+  repoUrl   String?
+  liveUrl   String?
+  client    String?
+  role      String?
+  year      Int?
+  metrics   Json? // [{ label, value }]
+  featured  Boolean       @default(false)
+  order     Int           @default(0)
+  status    ContentStatus @default(DRAFT)
+  views     Int           @default(0)
+
+  categoryId   String?
+  category     Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  technologies Technology[] @relation("ProjectTechnologies")
+  caseStudy    CaseStudy?
+
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, featured, order])
+  @@index([categoryId])
+}
+
+model CaseStudy {
+  id       String  @id @default(cuid())
+  title    String
+  slug     String  @unique
+  summary  String
+  context  String // the brief
+  problem  String
+  approach String
+  outcome  String
+  metrics  Json? // [{ label, value, delta }]
+  coverUrl String?
+  gallery  String[] @default([])
+
+  projectId String?  @unique
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  order       Int           @default(0)
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, order])
+}
+
+model Service {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String
+  icon        String? // lucide icon name
+  features    String[]      @default([])
+  priceFrom   String?
+  order       Int           @default(0)
+  status      ContentStatus @default(PUBLISHED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, order])
+}
+
+model SkillGroup {
+  id     String  @id @default(cuid())
+  name   String
+  slug   String  @unique
+  icon   String?
+  order  Int     @default(0)
+  skills Skill[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Skill {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  level       Int           @default(80)
+  years       Int?
+  description String?
+  icon        String?
+  order       Int           @default(0)
+  status      ContentStatus @default(PUBLISHED)
+
+  groupId String?
+  group   SkillGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, order])
+}
+
+model Experience {
+  id             String        @id @default(cuid())
+  company        String
+  role           String
+  slug           String        @unique
+  location       String?
+  employmentType String? // full-time | contract | freelance
+  startDate      DateTime
+  endDate        DateTime?
+  current        Boolean       @default(false)
+  summary        String?
+  highlights     String[]      @default([])
+  stack          String[]      @default([])
+  logoUrl        String?
+  url            String?
+  order          Int           @default(0)
+  status         ContentStatus @default(PUBLISHED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, order])
+}
+
+model Education {
+  id          String        @id @default(cuid())
+  institution String
+  degree      String
+  slug        String        @unique
+  field       String?
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  grade       String?
+  summary     String?
+  logoUrl     String?
+  order       Int           @default(0)
+  status      ContentStatus @default(PUBLISHED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, order])
+}
+
+model Certificate {
+  id            String        @id @default(cuid())
+  title         String
+  slug          String        @unique
+  issuer        String
+  issuedAt      DateTime
+  expiresAt     DateTime?
+  credentialId  String?
+  credentialUrl String?
+  imageUrl      String?
+  order         Int           @default(0)
+  status        ContentStatus @default(PUBLISHED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, order])
+}
+
+model Testimonial {
+  id        String        @id @default(cuid())
+  name      String
+  slug      String        @unique
+  role      String?
+  company   String?
+  quote     String
+  avatarUrl String?
+  rating    Int?          @default(5)
+  featured  Boolean       @default(false)
+  order     Int           @default(0)
+  status    ContentStatus @default(PUBLISHED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, featured, order])
+}
+
+model Post {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  excerpt     String
+  content     String
+  coverUrl    String?
+  tags        String[]      @default([])
+  readingTime Int?
+  views       Int           @default(0)
+  featured    Boolean       @default(false)
+  order       Int           @default(0)
+  status      ContentStatus @default(DRAFT)
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  authorId   String?
+  author     User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+model GalleryItem {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String?
+  imageUrl    String
+  thumbUrl    String?
+  album       String?
+  tags        String[]      @default([])
+  width       Int?
+  height      Int?
+  order       Int           @default(0)
+  status      ContentStatus @default(PUBLISHED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, order])
+}
+
+model Faq {
+  id       String        @id @default(cuid())
+  question String
+  slug     String        @unique
+  answer   String
+  category String?
+  order    Int           @default(0)
+  status   ContentStatus @default(PUBLISHED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, order])
+}
+
+// ---------------------------------------------------------------------------
+// Inbox, media, configuration
+// ---------------------------------------------------------------------------
+
+model Message {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  company   String?
+  budget    String?
+  body      String
+  status    MessageStatus @default(NEW)
+  ip        String?
+  userAgent String?
+  repliedAt DateTime?
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model Media {
+  id       String        @id @default(cuid())
+  url      String
+  publicId String?
+  provider MediaProvider @default(LOCAL)
+  filename String
+  mimeType String
+  size     Int
+  width    Int?
+  height   Int?
+  alt      String?
+  folder   String?
+
+  uploadedById String?
+  uploadedBy   User?   @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([folder, createdAt])
+}
+
+/// Singleton documents (hero, about, contact, theme, socials, resume, seo defaults).
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  group     String   @default("general")
+  label     String?
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@index([group])
+}
+
+model SeoMeta {
+  id             String   @id @default(cuid())
+  path           String   @unique // "/", "/projects"
+  title          String
+  description    String
+  keywords       String[] @default([])
+  ogImage        String?
+  canonical      String?
+  noIndex        Boolean  @default(false)
+  structuredData Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Analytics
+// ---------------------------------------------------------------------------
+
+model Visitor {
+  id          String   @id // anonymous hashed id from cookie
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @updatedAt
+  visits      Int      @default(1)
+  country     String?
+  device      String?
+  browser     String?
+  os          String?
+  referrer    String?
+  userAgent   String?
+
+  pageViews PageView[]
+}
+
+model PageView {
+  id         String   @id @default(cuid())
+  path       String
+  referrer   String?
+  country    String?
+  device     String?
+  durationMs Int?
+  sessionId  String?
+
+  visitorId String?
+  visitor   Visitor? @relation(fields: [visitorId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([path, createdAt])
+  @@index([createdAt])
+}
