@@ -1,0 +1,28 @@
+{
+  "name": "aurora-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Enterprise portfolio platform — public website, admin CMS, REST API",
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:web": "npm run dev -w @aurora/web",
+    "dev:api": "npm run start:dev -w @aurora/api",
+    "build": "npm run build -w @aurora/api && npm run build -w @aurora/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "db:generate": "npm run prisma:generate -w @aurora/api",
+    "db:migrate": "npm run prisma:migrate -w @aurora/api",
+    "db:push": "npm run prisma:push -w @aurora/api",
+    "db:seed": "npm run prisma:seed -w @aurora/api",
+    "db:studio": "npm run prisma:studio -w @aurora/api",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down"
+  }
+}

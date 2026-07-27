@@ -1,0 +1,306 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Aurora design system
+   An editorial, high-contrast identity: a warm paper light mode, a deep ink
+   dark mode, one ember accent, and a fine rule grid borrowed from print.
+   Nothing here is copied from another portfolio — the palette, type pairing and
+   motion language are defined once, in tokens, and reused everywhere.
+--------------------------------------------------------------------------- */
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-mono: var(--font-mono-code), ui-monospace, monospace;
+
+  --radius-card: 1.25rem;
+
+  --color-ink-950: oklch(0.16 0.012 60);
+  --color-ink-900: oklch(0.2 0.014 60);
+  --color-ink-800: oklch(0.26 0.014 60);
+  --color-paper-50: oklch(0.985 0.006 85);
+  --color-paper-100: oklch(0.96 0.008 85);
+  --color-paper-200: oklch(0.92 0.01 85);
+
+  --color-ember-400: oklch(0.78 0.16 45);
+  --color-ember-500: oklch(0.7 0.19 42);
+  --color-ember-600: oklch(0.62 0.2 40);
+  --color-mint-400: oklch(0.85 0.13 165);
+  --color-mint-500: oklch(0.78 0.15 165);
+
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-rise: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Radix accordion, driven by the height it measures for us. */
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+/* Semantic layer — components only ever reference these. */
+:root {
+  --background: var(--color-paper-50);
+  --surface: oklch(1 0 0);
+  --surface-muted: var(--color-paper-100);
+  --foreground: var(--color-ink-950);
+  --muted-foreground: oklch(0.5 0.014 60);
+  --border: oklch(0.87 0.01 75);
+  --border-strong: oklch(0.78 0.012 75);
+  --accent: var(--color-ember-600);
+  --accent-foreground: oklch(0.99 0 0);
+  --accent-soft: oklch(0.94 0.05 45);
+  --secondary-accent: var(--color-mint-500);
+  --ring: var(--color-ember-500);
+  --shadow-soft: 0 1px 2px oklch(0.2 0.02 60 / 0.05), 0 12px 32px -12px oklch(0.2 0.02 60 / 0.16);
+  --grid-line: oklch(0.2 0.02 60 / 0.055);
+  --glass: oklch(1 0 0 / 0.72);
+  color-scheme: light;
+}
+
+.dark {
+  --background: var(--color-ink-950);
+  --surface: oklch(0.215 0.014 60);
+  --surface-muted: oklch(0.245 0.014 60);
+  --foreground: var(--color-paper-50);
+  --muted-foreground: oklch(0.72 0.012 75);
+  --border: oklch(0.32 0.014 60);
+  --border-strong: oklch(0.42 0.016 60);
+  --accent: var(--color-ember-400);
+  --accent-foreground: oklch(0.18 0.02 45);
+  --accent-soft: oklch(0.3 0.06 45);
+  --secondary-accent: var(--color-mint-400);
+  --ring: var(--color-ember-400);
+  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.4), 0 24px 48px -24px oklch(0 0 0 / 0.7);
+  --grid-line: oklch(1 0 0 / 0.055);
+  --glass: oklch(0.215 0.014 60 / 0.72);
+  color-scheme: dark;
+}
+
+/* Expose the semantic tokens as Tailwind utilities (bg-surface, text-muted…). */
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted-foreground);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-secondary-accent: var(--secondary-accent);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* The print-style rule grid that runs behind every section. */
+  .grid-canvas {
+    background-image: linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+
+  .grain::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* Accent underline that draws itself on hover — used for every inline link. */
+  .link-underline {
+    position: relative;
+  }
+
+  .link-underline::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    height: 1px;
+    width: 100%;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .link-underline:hover::after,
+  .link-underline:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .prose-editorial {
+    max-width: 68ch;
+    line-height: 1.75;
+  }
+
+  .prose-editorial h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.75rem;
+  }
+
+  .prose-editorial h3 {
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+  }
+
+  .prose-editorial p {
+    margin-bottom: 1.15rem;
+    color: var(--muted-foreground);
+  }
+
+  .prose-editorial ul {
+    margin: 0 0 1.15rem 1.1rem;
+    list-style: disc;
+    color: var(--muted-foreground);
+  }
+
+  .prose-editorial li {
+    margin-bottom: 0.4rem;
+  }
+
+  .prose-editorial code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: var(--surface-muted);
+    padding: 0.15em 0.4em;
+    border-radius: 0.35rem;
+  }
+
+  .prose-editorial a {
+    color: var(--foreground);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 3px;
+  }
+}
+
+@utility container-page {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 84rem;
+  padding-inline: 1.25rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+
+  @media (width >= 80rem) {
+    padding-inline: 3rem;
+  }
+}
