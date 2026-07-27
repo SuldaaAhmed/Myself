@@ -1,0 +1,28 @@
+# Keep the build context small and prevent host artefacts — especially native
+# node_modules binaries — from leaking into the images.
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+**/dist
+coverage
+**/coverage
+uploads
+**/uploads
+
+.git
+.github
+.claude
+docs
+infra
+
+.env
+.env.*
+!.env.example
+
+*.log
+*.tsbuildinfo
+.DS_Store
+.vscode
+.idea

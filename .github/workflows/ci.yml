@@ -55,9 +55,13 @@ jobs:
 
       - run: npm ci
       - run: npm run db:generate
-      - run: npm run db:push -w @aurora/api
+      - run: npm run prisma:push -w @aurora/api
+      - run: npm run lint -w @aurora/api
       - run: npm run typecheck -w @aurora/api
       - run: npm run test -w @aurora/api
+      # Exercises auth, CSRF and a full resource lifecycle against the service
+      # database above.
+      - run: npm run test:e2e -w @aurora/api
       - run: npm run build -w @aurora/api
 
   web:
@@ -79,6 +83,7 @@ jobs:
 
       - run: npm ci
       - run: npm run db:generate
+      - run: npm run lint -w @aurora/web
       - run: npm run typecheck -w @aurora/web
       # The site renders from the API; with none reachable it falls back to
       # empty state, which is exactly what this build proves.
