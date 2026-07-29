@@ -51,7 +51,7 @@ export default tseslint.config(
   },
 
   {
-    files: ['apps/web/**/*.{ts,tsx}'],
+    files: ['apps/web/**/*.{ts,tsx}', 'apps/portfolio/**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: { ecmaFeatures: { jsx: true } },
     },

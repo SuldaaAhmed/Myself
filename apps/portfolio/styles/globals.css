@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Global stylesheet.
+ *
+ * Kept deliberately small. Anything that describes a *component* belongs in
+ * that component's className, and anything that describes a *token* belongs in
+ * `tailwind.config.ts`. What is left here is the handful of rules that have no
+ * element to attach to: document defaults, selection colour, scrollbar, and the
+ * reduced-motion safety net.
+ */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    /* Anchor links land below the sticky header rather than under it. */
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink font-body text-text-primary antialiased;
+    /* Prevents a horizontal scrollbar when a long monospace status line or an
+       un-breakable URL overflows on a narrow screen. */
+    overflow-x: hidden;
+  }
+
+  /* Headings default to the display face so a component only has to opt out,
+     never opt in — one less thing to forget in a new section. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tightest;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    @apply bg-accent-amber/25 text-text-primary;
+  }
+
+  /* The default focus outline is removed only because `.focus-ring` (defined as
+     a Tailwind plugin component) replaces it everywhere. Removing it without
+     that replacement would be an accessibility regression. */
+  :focus-visible {
+    outline: none;
+  }
+
+  /* Firefox; WebKit uses the ::-webkit-scrollbar rules below. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.border') transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border;
+    border: 3px solid theme('colors.ink');
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-status-archived;
+  }
+}
+
+@layer components {
+  /**
+   * `skip-link` — the first focusable element in the document. Invisible until
+   * focused, at which point it drops into the top-left corner and offers to
+   * jump past the navigation. Keyboard and screen-reader users get to the
+   * ledger without tabbing through the whole header on every route.
+   */
+  .skip-link {
+    @apply absolute left-4 top-4 z-50 -translate-y-24 rounded-sm border border-accent-amber
+           bg-ink px-4 py-2 font-display text-label uppercase text-accent-amber
+           transition-transform focus-visible:translate-y-0;
+  }
+
+  /**
+   * `ledger-rail` — the thin vertical line running down the left of a ledger
+   * section on desktop, with the monospace index printed against it. Dropped
+   * below `md`, where the rows become stacked cards and a rail would only steal
+   * width.
+   */
+  .ledger-rail {
+    @apply relative md:pl-rail;
+  }
+
+  .ledger-rail::before {
+    content: '';
+    @apply absolute bottom-0 left-0 top-0 hidden w-px bg-border md:block;
+  }
+}
+
+/**
+ * Reduced-motion safety net.
+ *
+ * Framer Motion already respects the preference through `MotionConfig
+ * reducedMotion="user"` in `components/MotionProvider.tsx`, which is the real
+ * implementation. This block covers what Framer cannot: CSS transitions,
+ * `scroll-behavior`, and the status dot's keyframe animation. Opacity is left
+ * alone — the requirement is to fall back to opacity-only, not to remove all
+ * feedback, and a hover state that vanishes entirely is harder to use, not
+ * easier.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

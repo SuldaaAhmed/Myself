@@ -84,6 +84,29 @@ jobs:
       # empty state, which is exactly what this build proves.
       - run: npm run build -w @aurora/web
 
+  portfolio:
+    name: Portfolio — lint, typecheck, build
+    runs-on: ubuntu-latest
+
+    env:
+      # NEXT_PUBLIC_API_URL is deliberately unset: with no API configured the
+      # app serves its fixtures, and this build proves that path stays green.
+      NEXT_PUBLIC_SITE_URL: http://localhost:3001
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint -w @aurora/portfolio
+      - run: npm run typecheck -w @aurora/portfolio
+      - run: npm run build -w @aurora/portfolio
+
   docker:
     name: Docker images build
     runs-on: ubuntu-latest

@@ -12,8 +12,9 @@
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
     "dev:web": "npm run dev -w @aurora/web",
+    "dev:portfolio": "npm run dev -w @aurora/portfolio",
     "dev:api": "npm run start:dev -w @aurora/api",
-    "build": "npm run build -w @aurora/api && npm run build -w @aurora/web",
+    "build": "npm run build -w @aurora/api && npm run build -w @aurora/web && npm run build -w @aurora/portfolio",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
